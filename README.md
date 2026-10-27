@@ -1,5 +1,7 @@
 # HouseParty card
 
+> **DO NOT USE — IN TESTING.** Experimental code only. Do not rely on this card for safety, security, or property protection.
+
 A Rust/WebAssembly alarm keypad for the HouseParty Home Assistant integration. It includes accessible motion, reduced-motion behavior, connection monitoring, privacy controls, exact force-arm confirmation, and a local-media idle screensaver.
 
 > **HA test candidate:** the release build, 30 Rust tests, strict Clippy checks, TypeScript checks, and npm audit pass. Real Home Assistant runtime testing is still required. Do not rely on it as your only alarm interface.
