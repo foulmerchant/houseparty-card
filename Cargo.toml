@@ -1,0 +1,16 @@
+[workspace]
+resolver = "2"
+members = ["crates/houseparty-core", "crates/houseparty-card-ui"]
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+publish = false
+
+# Size first: the binary's download + compile time is the card's main cost.
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"   # a panic traps; the JS shim catches it and shows the fallback UI
+strip = true

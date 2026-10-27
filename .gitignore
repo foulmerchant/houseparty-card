@@ -1,0 +1,6 @@
+/target
+/pkg
+/dist
+/shim/node_modules
+__pycache__/
+*.pyc

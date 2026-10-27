@@ -1,0 +1,360 @@
+/* Inherits the Home Assistant theme. Override the --rac-* variables in a
+   theme to recolor the states. The status ring is the one bold element;
+   everything else stays quiet. */
+
+.card {
+  --rac-safe-c: var(--rac-safe, var(--success-color, #43a047));
+  --rac-armed-c: var(--rac-armed, var(--error-color, #db4437));
+  --rac-transition-c: var(--rac-transition, var(--warning-color, #ffa600));
+  --rac-alert-c: var(--rac-alert, var(--error-color, #db4437));
+  --rac-muted: var(--secondary-text-color, #727272);
+  --rac-line: var(--divider-color, rgba(127, 127, 127, 0.3));
+  --rac-surface: var(--secondary-background-color, rgba(127, 127, 127, 0.08));
+  --rac-radius: var(--ha-card-border-radius, 12px);
+
+  position: relative;
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  color: var(--primary-text-color);
+}
+
+.title { margin: 0; font-size: 1.1rem; font-weight: 500; }
+.notice { margin: 0; color: var(--rac-muted); }
+.meta { margin: 0; font-size: 0.85rem; color: var(--rac-muted); text-align: center; }
+
+/* ---- status ring ---- */
+.status {
+  --tone: var(--rac-muted);
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(200px, 64%);
+  aspect-ratio: 1;
+  margin: 0 auto;
+}
+.status[data-tone="safe"] { --tone: var(--rac-safe-c); }
+.status[data-tone="armed"] { --tone: var(--rac-armed-c); }
+.status[data-tone="transition"] { --tone: var(--rac-transition-c); }
+.status[data-tone="alert"] { --tone: var(--rac-alert-c); }
+
+.ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring-track { fill: none; stroke: var(--rac-line); stroke-width: 8; }
+.ring-fill {
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 326.73; /* 2πr, r = 52 */
+  stroke-dashoffset: 0;
+  transition: stroke 0.3s ease;
+}
+/* Exit/entry delay: the ring drains on its own; Rust only sets the start. */
+.status.counting .ring-fill {
+  animation: rac-drain var(--delay, 30s) linear forwards;
+  animation-delay: calc(var(--elapsed, 0s) * -1);
+}
+@keyframes rac-drain { to { stroke-dashoffset: 326.73; } }
+.status.urgent .ring-fill { animation: rac-pulse 1s ease-in-out infinite; }
+@keyframes rac-pulse { 50% { opacity: 0.3; } }
+
+.status-text { position: relative; display: grid; place-items: center; gap: 2px; text-align: center; }
+.state-label { margin: 0; font-size: 1.35rem; font-weight: 600; color: var(--tone, var(--primary-text-color)); }
+.countdown { font-variant-numeric: tabular-nums; color: var(--rac-muted); min-height: 1.2em; }
+
+.lost {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 18px;
+  text-align: center;
+  border: 2px dashed var(--rac-muted);
+  border-radius: var(--rac-radius);
+}
+
+/* ---- buttons ---- */
+button {
+  font: inherit;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--rac-line);
+  border-radius: 10px;
+  background: var(--rac-surface);
+  color: var(--primary-text-color);
+  cursor: pointer;
+}
+button:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+button.primary {
+  background: var(--primary-color);
+  color: var(--text-primary-color, #fff);
+  border-color: transparent;
+}
+button.warn {
+  background: var(--rac-transition-c);
+  color: #000;
+  border-color: transparent;
+}
+.wide { width: 100%; }
+
+.actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 8px; }
+.row { display: flex; gap: 8px; }
+.row > button { flex: 1; }
+
+/* ---- banners ---- */
+.banner { margin: 0; padding: 10px 12px; border-radius: 10px; font-size: 0.9rem; }
+.banner.pending { background: var(--rac-surface); }
+.banner.error {
+  background: rgba(219, 68, 55, 0.14); /* fallback for older tablets */
+  background: color-mix(in srgb, var(--rac-alert-c) 14%, transparent);
+  color: var(--rac-alert-c);
+}
+
+/* ---- pre-arm ---- */
+.prearm {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--rac-transition-c);
+  border-radius: var(--rac-radius);
+}
+.prearm-title { margin: 0; font-weight: 600; }
+.list-title { margin: 0; font-size: 0.85rem; color: var(--rac-muted); }
+.blockers { margin: 0; padding-left: 18px; }
+
+/* ---- code entry ---- */
+.code-entry { display: grid; gap: 10px; }
+.code-title { margin: 0; text-align: center; display: grid; gap: 6px; }
+.pin-dots { display: flex; justify-content: center; gap: 12px; min-height: 28px; align-items: center; }
+.pin-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--rac-muted); box-sizing: border-box; }
+.pin-dot.lit { background: var(--primary-text-color); border-color: var(--primary-text-color); }
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.key { min-height: 56px; font-size: 1.25rem; }
+.key.quiet { font-size: 0.95rem; color: var(--rac-muted); }
+input[type="password"] {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  font: inherit;
+  color: var(--primary-text-color);
+  background: var(--rac-surface);
+  border: 1px solid var(--rac-line);
+  border-radius: 10px;
+}
+
+.details { display: grid; gap: 6px; }
+
+button.reveal {
+  min-height: 44px;
+  background: transparent;
+  border-style: dashed;
+  color: var(--rac-muted);
+}
+
+/* ---- idle screensaver ---- */
+.idle {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  border-radius: var(--rac-radius);
+  background: #000;
+  cursor: pointer;
+}
+.idle:focus-visible { outline: 3px solid var(--primary-color); outline-offset: -3px; }
+.idle-media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.idle-chip {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.idle-chip[data-corner="0"] { left: 12px; top: 12px; }
+.idle-chip[data-corner="1"] { right: 12px; top: 12px; }
+.idle-chip[data-corner="2"] { right: 12px; bottom: 12px; }
+.idle-chip[data-corner="3"] { left: 12px; bottom: 12px; }
+.idle-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--rac-muted); }
+.idle-chip[data-tone="safe"] .idle-dot { background: var(--rac-safe-c); }
+.idle-chip[data-tone="armed"] .idle-dot { background: var(--rac-armed-c); }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* ==========================================================================
+   Motion and feedback
+
+   Two rules, both for safety:
+   1. Never animate toward an unconfirmed state. A tap gets "sending" motion
+      (the comet). The bloom plays only when HouseParty reports a new state.
+   2. Never delay information. Text and state are present from the first
+      frame; motion is layered on top. Alerts and errors never fade in from
+      invisible, and nothing waits on an exit animation.
+   Performance: transform and opacity only (compositor-friendly), CSS only,
+   no JavaScript animation loop. Flashes stay at or under 1 per second.
+   ========================================================================== */
+
+.card {
+  --hp-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --hp-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ---- panels ease in as they appear ---- */
+.actions, .prearm, .code-entry, .details, .banner.pending, button.reveal {
+  animation: hp-enter 0.24s var(--hp-out) both;
+}
+@keyframes hp-enter { from { opacity: 0.35; transform: translateY(6px); } }
+
+/* Alerts arrive at full strength: movement only, never a fade from nothing. */
+.lost { animation: hp-rise 0.3s var(--hp-out); }
+@keyframes hp-rise { from { transform: translateY(8px) scale(0.98); } }
+
+/* ---- errors: a short, sharp shake ---- */
+.banner.error { animation: hp-shake 0.42s var(--hp-out); }
+@keyframes hp-shake {
+  15% { transform: translateX(-6px); }
+  30% { transform: translateX(5px); }
+  45% { transform: translateX(-4px); }
+  60% { transform: translateX(3px); }
+  75% { transform: translateX(-1px); }
+  100% { transform: none; }
+}
+
+/* ---- the state label eases in whenever it changes ---- */
+.state-label { display: inline-block; animation: hp-label 0.32s var(--hp-out); }
+@keyframes hp-label { from { opacity: 0.3; transform: translateY(8px) scale(0.98); } }
+
+/* ---- ring ---- */
+.ring-fill { transition: stroke 0.5s ease, opacity 0.25s ease; }
+
+/* Sending: the ring dims and a comet orbits until HouseParty answers. */
+.comet { display: none; transform-box: view-box; transform-origin: 60px 60px; }
+.status.sending .comet { display: block; animation: hp-orbit 1.1s linear infinite; }
+.status.sending .ring-fill { opacity: 0.4; }
+.comet-arc {
+  fill: none;
+  stroke: var(--primary-text-color);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 34 293;
+  opacity: 0.85;
+}
+@keyframes hp-orbit { to { transform: rotate(360deg); } }
+
+/* Confirmed change: one bloom in the new state's color. */
+.bloom {
+  position: absolute;
+  inset: 6.5%;
+  border-radius: 50%;
+  border: 3px solid var(--tone);
+  opacity: 0;
+  pointer-events: none;
+  animation: hp-bloom 0.9s var(--hp-out);
+}
+@keyframes hp-bloom {
+  0% { opacity: 0.7; transform: scale(0.82); }
+  100% { opacity: 0; transform: scale(1.24); }
+}
+
+/* Triggered: two alarm waves roll outward, half a beat apart. */
+.status::before, .status::after {
+  content: "";
+  position: absolute;
+  inset: 6.5%;
+  border-radius: 50%;
+  border: 3px solid var(--rac-alert-c);
+  opacity: 0;
+  pointer-events: none;
+}
+.status.urgent::before { animation: hp-wave 1.6s var(--hp-out) infinite; }
+.status.urgent::after { animation: hp-wave 1.6s var(--hp-out) 0.8s infinite; }
+@keyframes hp-wave {
+  0% { opacity: 0.6; transform: scale(0.9); }
+  100% { opacity: 0; transform: scale(1.38); }
+}
+
+/* Entry delay: the label breathes slowly. */
+.status.entry .state-label { animation: hp-label 0.32s var(--hp-out), hp-breathe 1.6s ease-in-out 0.32s infinite; }
+@keyframes hp-breathe { 50% { opacity: 0.55; } }
+
+/* ---- touch feedback ---- */
+button {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s var(--hp-out), filter 0.2s ease, opacity 0.2s ease,
+    background-color 0.2s ease, border-color 0.2s ease;
+}
+button:not(:disabled):active { transform: scale(0.96); filter: brightness(1.15); }
+.key:not(:disabled):active { transform: scale(0.9); background: var(--rac-line); }
+
+/* Code dots pop in a quick left-to-right ripple on each press. */
+.pin-dot { transition: background-color 0.15s ease, border-color 0.15s ease; }
+.pin-dot.lit { animation: hp-pop 0.28s var(--hp-spring) both; }
+.pin-dot.lit:nth-child(2) { animation-delay: 0.02s; }
+.pin-dot.lit:nth-child(3) { animation-delay: 0.04s; }
+.pin-dot.lit:nth-child(4) { animation-delay: 0.06s; }
+.pin-dot.lit:nth-child(5) { animation-delay: 0.08s; }
+.pin-dot.lit:nth-child(6) { animation-delay: 0.1s; }
+@keyframes hp-pop { 0% { transform: scale(0.55); } 100% { transform: scale(1); } }
+
+/* ---- checking connection ---- */
+.spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 3px solid var(--rac-line);
+  border-top-color: var(--primary-text-color);
+  animation: hp-spin 0.9s linear infinite;
+}
+@keyframes hp-spin { to { transform: rotate(360deg); } }
+
+/* ---- screensaver: slow fade in; waking is instant ---- */
+.idle { animation: hp-fade 0.8s ease both; }
+.idle-media { animation: hp-fade 0.7s ease both; }
+.idle-chip { animation: hp-enter 0.4s var(--hp-out) both; }
+@keyframes hp-fade { from { opacity: 0; } }
+
+/* Under the screensaver, hide the card and pause its animations: no work
+   for an old phone to do on things nobody can see. */
+.card[data-idle] > :not(.idle):not(style) { visibility: hidden; }
+.card[data-idle] *, .card[data-idle] *::before, .card[data-idle] *::after { animation-play-state: paused; }
+.card[data-idle] .idle, .card[data-idle] .idle * { animation-play-state: running; }
+
+/* ---- motion levels ---- */
+
+/* Subtle (default on low-end devices): fades and press feedback, no
+   flourishes. */
+.card[data-motion="subtle"] .bloom,
+.card[data-motion="subtle"] .status::before,
+.card[data-motion="subtle"] .status::after { display: none; }
+.card[data-motion="subtle"] .state-label,
+.card[data-motion="subtle"] .pin-dot.lit,
+.card[data-motion="subtle"] .banner.error { animation: none; }
+.card[data-motion="subtle"] .status.sending .comet { animation-duration: 2s; }
+
+/* Off, or the device asks for reduced motion: nothing moves except the
+   exit/entry drain, which is information, not decoration. Sending shows as
+   a still arc; triggered is a steady, non-flashing red. */
+.card[data-motion="off"] *, .card[data-motion="off"] *::before, .card[data-motion="off"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+.card[data-motion="off"] .status.counting .ring-fill {
+  animation: rac-drain var(--delay, 30s) linear forwards !important;
+  animation-delay: calc(var(--elapsed, 0s) * -1) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .card *, .card *::before, .card *::after { animation: none !important; transition: none !important; }
+  .card .status.counting .ring-fill {
+    animation: rac-drain var(--delay, 30s) linear forwards !important;
+    animation-delay: calc(var(--elapsed, 0s) * -1) !important;
+  }
+  .card .status.sending .comet { display: block; }
+}
