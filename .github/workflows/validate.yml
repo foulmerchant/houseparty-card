@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa
+        with:
+          category: plugin
       - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec
         with:
           toolchain: 1.99.1
@@ -32,11 +35,6 @@ jobs:
           cargo install wasm-bindgen-cli --version "$v" --locked
       - run: sudo apt-get update && sudo apt-get install -y binaryen
       - run: bash scripts/build.sh
-      # The HACS action only supports public repos; local layout checks still run.
-      - if: ${{ !github.event.repository.private }}
-        uses: hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa
-        with:
-          category: plugin
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: houseparty-card
